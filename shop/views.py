@@ -2,15 +2,29 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.models import User, Group
-from shop.models import Game, Developer, Player
+from shop.models import Game, Developer, Player, Transaction
 # Create your views here.
+
+
 def index(request):
     if request.method == "GET":
-        return HttpResponse("Hello World!")
+        user = request.user
+        if not request.user.is_authenticated:
+            return redirect('shop:home')
+
+        if user.groups.filter(name='developers').count != 0:
+            return redirect('shop:developer')
+
+        transactions = Transaction.objects.filter(player=user.player.id)
+        purchased_games = []
+        for transaction in transactions:
+            purchased_games.append(transaction.game)
+        return render(request, 'shop/index.html', {'user': user, 'purchased_games': purchased_games})
+
 
 def signup(request):
     if request.user.is_authenticated:
-        return redirect("shop:index")
+        return redirect('shop:index')
     return render(request, 'shop/signup.html')
 
 
@@ -24,17 +38,20 @@ def login_view(request):
         return redirect("shop:index")
     return render(request, 'shop/login.html')
 
+
 def login_user(request):
     pass
+
 
 def home(request):
     if request.method == "GET":
         if request.user.is_authenticated:
             return redirect("shop:index")
         games = Game.objects.all()
-        return render(request, "shop/home.html", {"games":games})
+        return render(request, "shop/home.html", {"games": games})
     else:
         return HttpResponse(status=500)
+
 
 def create(request):
     if request.method == "POST":
@@ -69,9 +86,21 @@ def create(request):
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         return redirect("shop:index")
 
-
     else:
         return redirect("shop:signup")
 
+
 def catalog_view(request):
+    pass
+
+
+def play_game(request, game_id):
+    pass
+
+
+def developer_view(request):
+    pass
+
+
+def search(request):
     pass

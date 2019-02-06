@@ -13,5 +13,8 @@ urlpatterns = [
     path('signup', views.signup, name='signup'),
     path('home', views.home, name='home'),
     path('catalog', views.catalog_view, name='catalog'),
+    path('developer', views.developer_view, name='developer'),
+    path('search', views.search, name='search'),
+    path('games/<int:game_id>/play', views.play_game, name='play_game'),
 
 ]
