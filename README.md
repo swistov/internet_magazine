@@ -1,2 +1,2 @@
-# KidsWish
+# Internet shop
 
