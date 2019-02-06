@@ -1,0 +1,16 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compitable" content="ie=edge">
+    <title>{% block title %}iWantMore - Главная{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <a href="{% url 'authapp-logout' %}">Выход</a>
+</head>
+<body>
+    {% block page %}
+    {% endblock %}
+</body>
+</html>

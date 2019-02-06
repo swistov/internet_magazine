@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ child.surname }} {{ child.name }}
+{% endblock %}
+
+{% block page %}
+    <a href="{% url 'home' %}">Главная</a>
+    <div>
+        <h2>{{ child.surname }} {{ child.name }}</h2>
+        <div>{{ child.birthday }}</div>
+            {% if child.photo %}
+                <img src="{{ child.photo.url }}" alt="{{ child.surname }}_{{ child.name }}" border="2" width="100" height="100">
+            {% endif %}
+        <div>Мать: {{ child.mother }} </div>
+        <div>Отец: {{ child.father }}</div>
+    </div>
+</body>
+{% endblock %}

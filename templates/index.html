@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block page %}
+    {% for child in childs %}
+        <div>
+            <h2>
+                <a href="{% url 'child-detail' child_id=child.id %}">{{ child.surname }} {{ child.name }}</a>
+            </h2>
+            <div>{{ child.birthday }}</div>
+                {% if child.photo %}
+                    <img src="{{ child.photo.url }}" alt="{{ child.surname }}_{{ child.name }}" border="2" width="100" height="100">
+                {% endif %}
+            <div>Мать: {{ child.mother }} </div>
+            <div>Отец: {{ child.father }}</div>
+        </div>
+    {% endfor %}
+{% endblock %}
