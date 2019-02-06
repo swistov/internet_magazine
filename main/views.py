@@ -89,18 +89,10 @@ def catalog_view(request):
     pass
 
 
-# @login_required(login_url='/auth/login')
-# def home(request):
-#     childs = Children.objects.all()
-#     return render(request, 'index.html', {'childs': childs})
-#
-#
-# def child_detail(request, child_id):
-#     child = get_object_or_404(Children, id=child_id)
-#     return render(request, 'child_detail.html', {'child': child})
+def play_game(request):
+    pass
 
 
-# @login_required(login_url='/auth/login')
 def home(request):
     return render(request, 'main/home.html', {})
 
