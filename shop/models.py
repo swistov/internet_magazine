@@ -16,12 +16,13 @@ class Developer(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
-#Create your models here.
+
 class Game(models.Model):
     title = models.CharField(max_length=30, null=False, blank=False, unique=False)
     price = models.FloatField(null=False, blank=False, unique=False)
     url = models.URLField(max_length=300, null=False, blank=False, unique=True)
     developer = models.ForeignKey(Developer, on_delete=models.CASCADE)
+
 
 class Transaction(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)

@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.models import User, Group
-from shop.models import Game, Developer, Player, Transaction
+from shop.models import Game, Developer, Player,Transaction
 # Create your views here.
 
 
@@ -10,21 +10,19 @@ def index(request):
     if request.method == "GET":
         user = request.user
         if not request.user.is_authenticated:
-            return redirect('shop:home')
-
-        if user.groups.filter(name='developers').count != 0:
-            return redirect('shop:developer')
-
+            return redirect("shop:home")
+        if user.groups.filter(name="developers").count() != 0:
+            return redirect("shop:developer")
         transactions = Transaction.objects.filter(player=user.player.id)
         purchased_games = []
         for transaction in transactions:
             purchased_games.append(transaction.game)
-        return render(request, 'shop/index.html', {'user': user, 'purchased_games': purchased_games})
+        return render(request, "shop/index.html", {"user":user, "purchased_games":purchased_games})
 
 
 def signup(request):
     if request.user.is_authenticated:
-        return redirect('shop:index')
+        return redirect("shop:index")
     return render(request, 'shop/signup.html')
 
 
@@ -40,7 +38,19 @@ def login_view(request):
 
 
 def login_user(request):
-    pass
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+        if not username or not password:
+            return render(request, "shop/login.html", {"error":"One of the fields was empty"})
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect("shop:index")
+        else:
+            return render(request, "shop/login.html", {"error":"Wrong username or password"})
+    else:
+        return redirect("shop:index")
 
 
 def home(request):
@@ -48,7 +58,7 @@ def home(request):
         if request.user.is_authenticated:
             return redirect("shop:index")
         games = Game.objects.all()
-        return render(request, "shop/home.html", {"games": games})
+        return render(request, "shop/home.html", {"games":games})
     else:
         return HttpResponse(status=500)
 
@@ -103,4 +113,16 @@ def developer_view(request):
 
 
 def search(request):
+    pass
+
+
+def publish(request):
+    pass
+
+
+def developers_games(request):
+    pass
+
+
+def edit_game(request, game_id):
     pass
