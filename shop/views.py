@@ -3,6 +3,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.models import User, Group
 from shop.models import Game, Developer, Player,Transaction
+
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 # Create your views here.
 
 
@@ -167,4 +171,42 @@ def publish_game(request):
 
 
 def create_game(request):
-    pass
+    if request.method == 'POST':
+        user = request.user
+        if not user.is_authenticated:
+            return HttpResponse(status=500)
+
+        if user.groups.filter(name='developers').count() == 0:
+            return HttpResponse(status=500)
+
+        developer = user.developer
+        title = request.POST['title']
+        price = request.POST['price']
+        url = request.POST['url']
+
+        if not title and not price and not url:
+            return render(request, 'shop/publish_game_form.html', {'error': 'Please fill in all required fillds'})
+
+        # Parse price
+        try:
+            float_price = float(price)
+        except ValueError:
+            return render(request, 'shop/publish_game_form.html', {'error': 'Price is not a number'})
+
+        if float_price <= 0:
+            return render(request, 'shop/publish_game_form.html', {'error': 'Price must be more zero'})
+
+        # Validate url
+        try:
+            URLValidator()(url)
+        except ValidationError:
+            return render(request, 'shop/publish_game_form.html', {'error': 'URL is not valid'})
+
+        try:
+            Game.objects.create(title=title, price=float_price, url=url, developer=developer)
+        except (ValidationError, IntegrityError) as e:
+            return render(request, 'shop/publish_game_form.html', {'error': 'URL is not unique'})
+
+        return redirect('shop:developer_games')
+    else:
+        return redirect('shop:signup')
