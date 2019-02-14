@@ -7,6 +7,7 @@ from shop.models import Game, Developer, Player,Transaction
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from hashlib import md5
 # Create your views here.
 
 
@@ -105,11 +106,143 @@ def create(request):
 
 
 def catalog_view(request):
+    if request.method == 'GET':
+        user = request.user
+
+        if not user.is_authenticated:
+            return redirect('shop:login')
+
+        if user.groups.filter(name='developers').count() != 0:
+            return redirect('shop:index')
+
+        games = Game.objects.all()
+
+        return render(request, 'shop/catalog.html', {'games': games})
+
+    else:
+        return HttpResponse(status=500)
+
+
+def game_info(request, game_id):
+    # Selled ID: iwantmore
+    # Secret Key: 54027aa7a6f9910c667a7789ad1f31f5
+    if request.method == 'GET':
+        user = request.user
+
+        if not user.is_authenticated:
+            return redirect('shop:login')
+
+        if user.groups.filter(name='developers').count() != 0:
+            return redirect('shop:index')
+        game = get_object_or_404(Game, pk=game_id)
+
+        secret_key = '54027aa7a6f9910c667a7789ad1f31f5'
+        pid = 'test_sale'
+        sid = 'iwantmore'
+        amount = game.price
+        success = 'http://localhost:8000/payment/success/?game_id={}'.format(game_id)
+        cancel = 'http://localhost:8000/payment/cancel'
+        error = 'http://localhost:8000/payment/error'
+        checksumstr = 'pid={}&sid={}&amount={}&token={}'.format(pid, sid, amount, secret_key)
+        digest = md5(checksumstr.encode('ascii'))
+        checksum = digest.hexdigest()
+        url = 'http://payments.webcourse.niksula.hut.fi/pay/'
+        transaction = Transaction.objects.filter(player=user.player.id, game=game.id)
+
+        if transaction.count() != 0:
+            return render(request, 'shop/index.html', {'error': 'Game already is in catalog'})
+
+        return render(request, 'shop/game_info.html', {'game': game,
+                                                       'url': url,
+                                                       'pid': pid,
+                                                       'sid': sid,
+                                                       'amount': amount,
+                                                       'success': success,
+                                                       'cancel': cancel,
+                                                       'error': error,
+                                                       'checksum': checksum})
+    else:
+        return HttpResponse(status=500)
+
+
+def payment_success(request):
+    if request.method == 'GET':
+        user = request.user
+
+        if not user.is_authenticated:
+            return redirect('shop:login')
+
+        if user.groups.filter(name='developers').count() != 0:
+            return redirect('shop:index')
+        game_id = request.GET['game_id']
+        game = get_object_or_404(Game, pk=game_id)
+        secret_key = '54027aa7a6f9910c667a7789ad1f31f5'
+        pid = request.GET['pid']
+        ref = request.GET['ref']
+        result = request.GET['result']
+        checksum = request.GET['checksum']
+        checksumstr = 'pid={}&ref={}&result={}&token={}'.format(pid, ref, result, secret_key)
+        digest = md5(checksumstr.encode('ascii'))
+        calculated_hash = digest.hexdigest()
+        if calculated_hash == checksum:
+            Transaction.objects.create(game=game, player=user.player, paid_amount=game.price).save()
+            return redirect('shop:index')
+        else:
+            return HttpResponse(status=500)
+    else:
+        return HttpResponse(status=500)
+
+
+def payment_cancel(request):
+    if request.method == 'GET':
+        user = request.user
+
+        if not user.is_authenticated:
+            return redirect('shop:login')
+
+        if user.groups.filter(name='developers').count() != 0:
+            return redirect('shop:index')
+
+        secret_key = '54027aa7a6f9910c667a7789ad1f31f5'
+        pid = request.GET['pid']
+        ref = request.GET['ref']
+        result = request.GET['result']
+        checksum = request.GET['checksum']
+        checksumstr = 'pid={}&ref={}&result={}&token={}'.format(pid, ref, result, secret_key)
+        digest = md5(checksumstr.encode('ascii'))
+        calculated_hash = digest.hexdigest()
+        if calculated_hash == checksum:
+            return render(request, 'shop/index.html', {'error': 'Payment is canseled'})
+        else:
+            return HttpResponse(status=500)
+    else:
+        return HttpResponse(status=500)
+
+
+def payment_error(request):
     pass
 
 
 def play_game(request, game_id):
-    pass
+    if request.method == 'GET':
+        user = request.user
+
+        if not user.is_authenticated:
+            return redirect('shop:login')
+
+        if user.groups.filter(name='developers').count() != 0:
+            return redirect('shop:index')
+
+        game = get_object_or_404(Game, pk=game_id)
+        player = user.player
+        transaction = Transaction.objects.filter(game=game, player=player.id)
+        if transaction.count() != 0:
+            return render(request, 'shop/play_game.html', {'game': game})
+        else:
+            return HttpResponse(status=500)
+
+    else:
+        return HttpResponse(status=500)
 
 
 def developer_view(request):
@@ -132,7 +265,23 @@ def developer_view(request):
 
 
 def search(request):
-    pass
+    if request.method == 'POST':
+        user = request.user
+
+        if not user.is_authenticated:
+            return HttpResponse(status=500)
+
+        if user.groups.filter(name='developers').count() != 0:
+            return HttpResponse(status=500)
+
+        querry = request.POST['q']
+        if not querry:
+            return render(request, 'shop/search_result.html', {'error': 'Empty search'})
+        games = Game.objects.filter(title__icontains=querry)
+        return render(request, 'shop/search_result.html', {'games': games, 'querry': querry})
+
+    else:
+        return HttpResponse(status=500)
 
 
 def publish_page_view(request):
@@ -231,7 +380,56 @@ def create_game(request):
 
 
 def edit_game_update(request, game_id):
-    pass
+    if request.method == 'POST':
+        user = request.user
+
+        if not user.is_authenticated:
+            return HttpResponse(status=500)
+
+        if user.groups.filter(name='developers').count() == 0:
+            return HttpResponse(status=500)
+
+        game = get_object_or_404(Game, pk=game_id)
+
+        if game.developer.user_id == user.id:
+            title = request.POST['title']
+            price = request.POST['price']
+            url = request.POST['url']
+
+            if not title and not price and not url:
+                return render(request, 'shop/edit_game.html', {'error': 'At least on of the filed must be filled',
+                                                               'game': game})
+            if title.strip():
+                Game.objects.filter(pk=game_id).update(title=title)
+            if price.strip():
+                try:
+                    float_price = float(price)
+                except ValueError:
+                    return render(request, 'shop/edit/game.html', {'error': 'Price is not number', 'game': game})
+
+                if float_price <= 0:
+                    return render(request, 'shop/edit/game.html', {'error': 'Price is negative', 'game': game})
+
+                Game.objects.filter(pk=game_id).update(price=price)
+
+            if url.strip():
+                try:
+                    URLValidator()(url)
+                except ValidationError:
+                    return render(request, 'shop/edit/game.html', {'error': 'URL is malformed', 'game': game})
+
+                try:
+                    Game.objects.filter(pk=game_id).update(url=url)
+                except (ValidationError, IntegrityError) as e:
+                    return render(request, 'shop/edit/game.html', {'error': 'URL is not unique', 'game': game})
+
+            return redirect('shop:developer_games')
+
+        else:
+            return HttpResponse(status=500)
+
+    else:
+        HttpResponse(status=500)
 
 
 def edit_game_delete(request, game_id):
@@ -252,3 +450,6 @@ def edit_game_delete(request, game_id):
 
     else:
         return HttpResponse(status=500)
+
+def facebook_handler(request):
+    pass
