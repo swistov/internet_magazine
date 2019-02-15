@@ -46,7 +46,12 @@
 
                            </div>
                       </div>
-                  </form>
+                       <div class="panel-block">
+                            <a class="button is-link is-outlined is-fullwidth" onclick="$(this).button('loading');" style="background:blue; color:white" name="facebook" href="{% url 'social:begin' 'facebook' %}">
+                                 Login with  Facebook
+                            </a>
+                       </div>
+                 </form>
             </div>
           </nav>
 

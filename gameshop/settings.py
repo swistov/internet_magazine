@@ -24,7 +24,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'gdy*joj_-2xb*7&)up4(0*!2^o8hv101^6tugy#x^5(!p0rwtc'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -85,19 +86,19 @@ AUTHENTICATION_BACKENDS = (
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
 }
 
-# DATABASES['default'] = dj_database_url.config()
+DATABASES['default'] = dj_database_url.config()
 
 LOGIN_REDIRECT_URL = 'shop:facebook_handler'
 SOCIAL_AUTH_FACEBOOK_KEY = os.environ.get('FACEBOOK_APP_ID')
 SOCIAL_AUTH_FACEBOOK_SECRET = os.environ.get('FACEBOOK_APP_SECRET')
 # SOCIAL_AUTH_FACEBOOK_KEY = 957266861145783
-# SOCIAL_AUTH_FACEBOOK_SECRET= '0c9c3c3ba96f1005fb9fe68d6448f89f'
+# SOCIAL_AUTH_FACEBOOK_SECRET = '0c9c3c3ba96f1005fb9fe68d6448f89f'
 
 
 # Password validation
