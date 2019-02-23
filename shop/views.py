@@ -22,7 +22,7 @@ def index(request):
         purchased_games = []
         for transaction in transactions:
             purchased_games.append(transaction.game)
-        return render(request, "shop/index.html", {"user":user, "purchased_games":purchased_games})
+        return render(request, "shop/index.html", {"user": user, "purchased_games": purchased_games})
 
 
 def signup(request):
@@ -63,7 +63,7 @@ def home(request):
         if request.user.is_authenticated:
             return redirect("shop:index")
         games = Game.objects.all()
-        return render(request, "shop/home.html", {"games":games})
+        return render(request, "shop/home.html", {"games": games})
     else:
         return HttpResponse(status=500)
 
